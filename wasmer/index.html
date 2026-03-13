@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>八字排盘工具</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#8B5A2B',
+            secondary: '#D2B48C',
+            accent: '#CD853F',
+            neutral: '#F5F5DC',
+            dark: '#3A2714'
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            serif: ['Noto Serif SC', 'serif']
+          }
+        }
+      }
+    }
+  </script>
+  
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .text-shadow {
+        text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+      }
+      .bg-pattern {
+        background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%238b5a2b' fill-opacity='0.05' fill-rule='evenodd'/%3E%3C/svg%3E");
+      }
+      .scroll-smooth {
+        scroll-behavior: smooth;
+      }
+      .char-style {
+        @apply text-2xl md:text-3xl font-serif font-bold text-primary p-2 bg-neutral rounded-md shadow-md border border-secondary/30;
+      }
+      .element-card {
+        @apply bg-white/80 backdrop-blur-sm rounded-xl p-5 shadow-lg border border-secondary/30 transition-all duration-300 hover:shadow-xl;
+      }
+      .btn-primary {
+        @apply bg-primary hover:bg-primary/90 text-white font-medium py-2 px-6 rounded-lg shadow-md transition-all duration-300 transform hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-primary/50;
+      }
+      .btn-secondary {
+        @apply bg-secondary hover:bg-secondary/90 text-dark font-medium py-2 px-6 rounded-lg shadow-md transition-all duration-300 transform hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-secondary/50;
+      }
+      .form-input {
+        @apply w-full px-4 py-2 border border-secondary/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all duration-300;
+      }
+      .tooltip {
+        @apply invisible absolute bg-dark text-white text-xs rounded py-1 px-2 -mt-10 opacity-0 transition-all duration-300;
+      }
+      .has-tooltip:hover .tooltip {
+        @apply visible opacity-100;
+      }
+    }
+  </style>
+</head>
+<body class="bg-neutral bg-pattern min-h-screen font-sans text-dark">
+  <header class="bg-primary/90 text-white shadow-lg">
+    <div class="container mx-auto px-4 py-5">
+      <div class="flex justify-between items-center">
+        <div class="flex items-center space-x-3">
+          <i class="fa fa-calendar-o text-2xl"></i>
+          <h1 class="text-xl md:text-2xl font-bold text-shadow">八字排盘工具</h1>
+        </div>
+        <nav>
+          <ul class="flex space-x-6">
+            <li><a href="#calculator" class="hover:text-secondary transition-colors duration-300">排盘</a></li>
+            <li><a href="#explanation" class="hover:text-secondary transition-colors duration-300">解释</a></li>
+            <li><a href="#about" class="hover:text-secondary transition-colors duration-300">关于</a></li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="container mx-auto px-4 py-8">
+    <!-- 排盘计算器部分 -->
+    <section id="calculator" class="mb-12 scroll-smooth">
+      <div class="element-card max-w-3xl mx-auto">
+        <h2 class="text-xl md:text-2xl font-bold mb-6 text-primary border-b-2 border-secondary/30 pb-3">
+          <i class="fa fa-calculator mr-2"></i>八字排盘
+        </h2>
+        
+        <form id="baziForm" class="space-y-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label for="year" class="block text-sm font-medium mb-2">年份</label>
+              <input type="number" id="year" class="form-input" placeholder="例如: 1990" min="1900" max="2100" required>
+            </div>
+            
+            <div>
+              <label for="month" class="block text-sm font-medium mb-2">月份</label>
+              <input type="number" id="month" class="form-input" placeholder="1-12" min="1" max="12" required>
+            </div>
+            
+            <div>
+              <label for="day" class="block text-sm font-medium mb-2">日期</label>
+              <input type="number" id="day" class="form-input" placeholder="1-31" min="1" max="31" required>
+            </div>
+            
+            <div>
+              <label for="hour" class="block text-sm font-medium mb-2">时辰</label>
+              <select id="hour" class="form-input" required>
+                <option value="">请选择时辰</option>
+                <option value="23">子 (23:00-01:00)</option>
+                <option value="1">丑 (01:00-03:00)</option>
+                <option value="3">寅 (03:00-05:00)</option>
+                <option value="5">卯 (05:00-07:00)</option>
+                <option value="7">辰 (07:00-09:00)</option>
+                <option value="9">巳 (09:00-11:00)</option>
+                <option value="11">午 (11:00-13:00)</option>
+                <option value="13">未 (13:00-15:00)</option>
+                <option value="15">申 (15:00-17:00)</option>
+                <option value="17">酉 (17:00-19:00)</option>
+                <option value="19">戌 (19:00-21:00)</option>
+                <option value="21">亥 (21:00-23:00)</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="flex justify-center pt-4">
+            <button type="submit" class="btn-primary">
+              <i class="fa fa-magic mr-2"></i>排出八字
+            </button>
+            <button type="reset" class="btn-secondary ml-4">
+              <i class="fa fa-refresh mr-2"></i>重置
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+    
+    <!-- 八字结果展示部分 -->
+    <section id="result" class="mb-12 hidden">
+      <div class="element-card max-w-4xl mx-auto">
+        <h2 class="text-xl md:text-2xl font-bold mb-6 text-primary border-b-2 border-secondary/30 pb-3">
+          <i class="fa fa-star-o mr-2"></i>八字命盘
+        </h2>
+        
+        <div id="baziResult" class="text-center mb-8">
+          <div class="grid grid-cols-4 gap-4 mb-8">
+            <div class="bg-neutral/70 rounded-lg p-4">
+              <h3 class="text-lg font-medium text-primary mb-2">年柱</h3>
+              <div class="flex justify-center">
+                <span id="yearColumn" class="char-style"></span>
+              </div>
+            </div>
+            
+            <div class="bg-neutral/70 rounded-lg p-4">
+              <h3 class="text-lg font-medium text-primary mb-2">月柱</h3>
+              <div class="flex justify-center">
+                <span id="monthColumn" class="char-style"></span>
+              </div>
+            </div>
+            
+            <div class="bg-neutral/70 rounded-lg p-4">
+              <h3 class="text-lg font-medium text-primary mb-2">日柱</h3>
+              <div class="flex justify-center">
+                <span id="dayColumn" class="char-style"></span>
+              </div>
+            </div>
+            
+            <div class="bg-neutral/70 rounded-lg p-4">
+              <h3 class="text-lg font-medium text-primary mb-2">时柱</h3>
+              <div class="flex justify-center">
+                <span id="hourColumn" class="char-style"></span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div class="bg-neutral/70 rounded-lg p-5">
+              <h3 class="text-lg font-medium text-primary mb-3 flex items-center">
+                <i class="fa fa-sun-o mr-2"></i>五行统计
+              </h3>
+              <div id="elementStats" class="text-left space-y-2"></div>
+            </div>
+            
+            <div class="bg-neutral/70 rounded-lg p-5">
+              <h3 class="text-lg font-medium text-primary mb-3 flex items-center">
+                <i class="fa fa-balance-scale mr-2"></i>日主强弱
+              </h3>
+              <div id="dayMasterStrength" class="text-left space-y-2"></div>
+            </div>
+          </div>
+        </div>
+        
+        <div id="baziExplanation" class="space-y-6">
+          <div class="bg-neutral/70 rounded-lg p-5">
+            <h3 class="text-lg font-medium text-primary mb-3 flex items-center">
+              <i class="fa fa-book mr-2"></i>八字命理解析
+            </h3>
+            <div id="explanationContent" class="text-left space-y-3"></div>
+          </div>
+        </div>
+        
+        <div class="flex justify-center mt-8">
+          <button id="printBtn" class="btn-secondary">
+            <i class="fa fa-print mr-2"></i>打印命盘
+          </button>
+        </div>
+      </div>
+    </section>
+    
+    <!-- 八字解释部分 -->
+    <section id="explanation" class="mb-12 scroll-smooth">
+      <div class="element-card max-w-4xl mx-auto">
+        <h2 class="text-xl md:text-2xl font-bold mb-6 text-primary border-b-2 border-secondary/30 pb-3">
+          <i class="fa fa-info-circle mr-2"></i>八字基础知识
+        </h2>
+        
+        <div class="space-y-6">
+          <div>
+            <h3 class="text-lg font-medium text-primary mb-3">什么是八字?</h3>
+            <p class="text-dark/80">八字，即四柱八字，是中国传统命理学术中的一种算命方法。它是根据一个人出生的年、月、日、时，分别用天干地支来表示，形成年柱、月柱、日柱、时柱，每一柱由天干和地支搭配而成，共八个字，因此称为"八字"。</p>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <h3 class="text-lg font-medium text-primary mb-3">天干地支</h3>
+              <p class="text-dark/80 mb-3">天干有十个：甲、乙、丙、丁、戊、己、庚、辛、壬、癸。</p>
+              <p class="text-dark/80">地支有十二个：子、丑、寅、卯、辰、巳、午、未、申、酉、戌、亥。</p>
+            </div>
+            
+            <div>
+              <h3 class="text-lg font-medium text-primary mb-3">五行生克</h3>
+              <p class="text-dark/80 mb-3">五行包括：金、木、水、火、土。</p>
+              <p class="text-dark/80 mb-2">相生关系：金生水，水生木，木生火，火生土，土生金。</p>
+              <p class="text-dark/80">相克关系：金克木，木克土，土克水，水克火，火克金。</p>
+            </div>
+          </div>
+          
+          <div>
+            <h3 class="text-lg font-medium text-primary mb-3">八字命盘结构</h3>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div class="bg-neutral/70 rounded-lg p-3 text-center">
+                <h4 class="font-medium text-primary">年柱</h4>
+                <p class="text-sm text-dark/80">代表祖先、父母和青少年时期</p>
+              </div>
+              <div class="bg-neutral/70 rounded-lg p-3 text-center">
+                <h4 class="font-medium text-primary">月柱</h4>
+                <p class="text-sm text-dark/80">代表兄弟姐妹、父母和青年时期</p>
+              </div>
+              <div class="bg-neutral/70 rounded-lg p-3 text-center">
+                <h4 class="font-medium text-primary">日柱</h4>
+                <p class="text-sm text-dark/80">代表自己、配偶和中年时期</p>
+              </div>
+              <div class="bg-neutral/70 rounded-lg p-3 text-center">
+                <h4 class="font-medium text-primary">时柱</h4>
+                <p class="text-sm text-dark/80">代表子女、晚年和未来发展</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    <!-- 关于部分 -->
+    <section id="about" class="mb-12 scroll-smooth">
+      <div class="element-card max-w-4xl mx-auto">
+        <h2 class="text-xl md:text-2xl font-bold mb-6 text-primary border-b-2 border-secondary/30 pb-3">
+          <i class="fa fa-coffee mr-2"></i>关于本工具
+        </h2>
+        
+        <div class="space-y-4">
+          <p class="text-dark/80">本工具基于中国传统八字命理学原理开发，用于快速排出个人八字命盘。八字命理学是中国传统文化的重要组成部分，旨在通过分析一个人出生时的时空信息，揭示其性格特点、运势走向和潜在机遇。</p>
+          
+          <p class="text-dark/80">需要注意的是，八字命理仅供参考，不能完全决定一个人的命运。人生的发展受到多种因素的影响，包括个人努力、环境和选择等。请以科学的态度看待命理分析结果。</p>
+          
+          <div class="bg-neutral/70 rounded-lg p-4 mt-6">
+            <h3 class="text-lg font-medium text-primary mb-3">使用提示</h3>
+            <ul class="list-disc pl-5 space-y-2 text-dark/80">
+              <li>请确保输入的出生年月日时准确无误，时辰的划分以23点为日的分界。</li>
+              <li>本工具主要用于排出八字命盘和进行基本的五行分析，不提供具体的运势预测。</li>
+              <li>如需更深入的命理分析，建议咨询专业的命理师。</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="bg-primary/90 text-white py-6">
+    <div class="container mx-auto px-4">
+      <div class="flex flex-col md:flex-row justify-between items-center">
+        <div class="mb-4 md:mb-0">
+          <p>© 2025 八字排盘工具 | 传统命理文化探索</p>
+        </div>
+        <div class="flex space-x-4">
+          <a href="#calculator" class="hover:text-secondary transition-colors duration-300">排盘</a>
+          <a href="#explanation" class="hover:text-secondary transition-colors duration-300">解释</a>
+          <a href="#about" class="hover:text-secondary transition-colors duration-300">关于</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // 八字计算核心逻辑
+    document.addEventListener('DOMContentLoaded', function() {
+      const baziForm = document.getElementById('baziForm');
+      const resultSection = document.getElementById('result');
+      const printBtn = document.getElementById('printBtn');
+      
+      // 天干数组
+      const heavenlyStems = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸'];
+      
+      // 地支数组
+      const earthlyBranches = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'];
+      
+      // 五行对应关系
+      const fiveElements = {
+        '甲': '木', '乙': '木', '丙': '火', '丁': '火', '戊': '土',
+        '己': '土', '庚': '金', '辛': '金', '壬': '水', '癸': '水',
+        '子': '水', '丑': '土', '寅': '木', '卯': '木', '辰': '土',
+        '巳': '火', '午': '火', '未': '土', '申': '金', '酉': '金',
+        '戌': '土', '亥': '水'
+      };
+      
+      // 天干地支组合
+      const stemBranchCombinations = [];
+      for (let i = 0; i < 60; i++) {
+        stemBranchCombinations.push(heavenlyStems[i % 10] + earthlyBranches[i % 12]);
+      }
+      
+      // 计算年柱
+      function calculateYearColumn(year) {
+        // 减去1900，因为1900年是庚子年(序号36)
+        const index = (year - 1900 + 36) % 60;
+        return stemBranchCombinations[index];
+      }
+      
+      // 计算月柱
+      function calculateMonthColumn(year, month, day) {
+        // 节气计算比较复杂，这里简化处理
+        // 月柱以节气为分界，非精确计算
+        const baseYear = 1900;
+        const baseIndex = 3; // 1900年1月小寒后为丁丑月(序号3)
+        
+        // 计算从1900年到指定年份的总月数
+        let totalMonths = (year - baseYear) * 12 + month - 1;
+        
+        // 加上基准月的偏移量
+        const index = (baseIndex + totalMonths) % 60;
+        
+        // 考虑节气的影响，简化处理
+        // 这里假设每月的15日为节气分界
+        if (day < 15) {
+          return stemBranchCombinations[(index - 1 + 60) % 60];
+        }
+        
+        return stemBranchCombinations[index];
+      }
+      
+      // 计算日柱
+      function calculateDayColumn(year, month, day) {
+        // 日柱计算方法
+        // 蔡氏公式简化版，计算从1900年1月1日(庚子日)开始的天数
+        let y = year;
+        if (month < 3) {
+          y--;
+          month += 12;
+        }
+        
+        let c = Math.floor(y / 100);
+        y = y % 100;
+        
+        // 计算从1900年1月31日开始的天数
+        let days = 365 * y + Math.floor(y / 4) - Math.floor(y / 100) + Math.floor(y / 400) + 
+                  Math.floor(30.6 * (month + 1)) + day - 1 - 31;
+        
+        // 1900年1月1日是庚子日(序号36)
+        const index = (36 + days) % 60;
+        return stemBranchCombinations[index];
+      }
+      
+      // 计算时柱
+      function calculateHourColumn(hour) {
+        // 时柱计算，23-1点为子时，依次类推
+        // 时柱天干由日柱天干决定
+        // 日上起时法：甲己还加甲，乙庚丙作初，丙辛从戊起，丁壬庚子居，戊癸何方发，壬子是真途
+        const dayStemIndex = heavenlyStems.indexOf(calculateDayColumn(
+          parseInt(document.getElementById('year').value),
+          parseInt(document.getElementById('month').value),
+          parseInt(document.getElementById('day').value)
+        ).charAt(0));
+        
+        // 日上起时表
+        const hourStemTable = [
+          [0, 2, 4, 6, 8], // 甲己日
+          [2, 4, 6, 8, 0], // 乙庚日
+          [4, 6, 8, 0, 2], // 丙辛日
+          [6, 8, 0, 2, 4], // 丁壬日
+          [8, 0, 2, 4, 6]  // 戊癸日
+        ];
+        
+        // 时支索引
+        const hourBranchIndex = Math.floor((hour % 24) / 2);
+        
+        // 时干索引
+        const hourStemIndex = hourStemTable[Math.floor(dayStemIndex / 5)][hourBranchIndex];
+        
+        return heavenlyStems[hourStemIndex] + earthlyBranches[hourBranchIndex];
+      }
+      
+      // 计算五行统计
+      function calculateElementStats(yearColumn, monthColumn, dayColumn, hourColumn) {
+        const elements = { '木': 0, '火': 0, '土': 0, '金': 0, '水': 0 };
+        
+        // 统计年柱
+        elements[fiveElements[yearColumn.charAt(0)]]++;
+        elements[fiveElements[yearColumn.charAt(1)]]++;
+        
+        // 统计月柱
+        elements[fiveElements[monthColumn.charAt(0)]]++;
+        elements[fiveElements[monthColumn.charAt(1)]]++;
+        
+        // 统计日柱
+        elements[fiveElements[dayColumn.charAt(0)]]++;
+        elements[fiveElements[dayColumn.charAt(1)]]++;
+        
+        // 统计时柱
+        elements[fiveElements[hourColumn.charAt(0)]]++;
+        elements[fiveElements[hourColumn.charAt(1)]]++;
+        
+        return elements;
+      }
+      
+      // 分析日主强弱
+      function analyzeDayMasterStrength(dayMaster, elements) {
+        // 日主强弱分析，简化版
+        const elementType = fiveElements[dayMaster];
+        let strength = 0;
+        
+        // 同类五行加分
+        strength += elements[elementType] * 2;
+        
+        // 生我者加分
+        switch(elementType) {
+          case '木': strength += elements['水']; break;
+          case '火': strength += elements['木']; break;
+          case '土': strength += elements['火']; break;
+          case '金': strength += elements['土']; break;
+          case '水': strength += elements['金']; break;
+        }
+        
+        // 克我者减分
+        switch(elementType) {
+          case '木': strength -= elements['金'] * 2; break;
+          case '火': strength -= elements['水'] * 2; break;
+          case '土': strength -= elements['木'] * 2; break;
+          case '金': strength -= elements['火'] * 2; break;
+          case '水': strength -= elements['土'] * 2; break;
+        }
+        
+        // 我生者减分
+        switch(elementType) {
+          case '木': strength -= elements['火']; break;
+          case '火': strength -= elements['土']; break;
+          case '土': strength -= elements['金']; break;
+          case '金': strength -= elements['水']; break;
+          case '水': strength -= elements['木']; break;
+        }
+        
+        // 我克者一般影响不大，暂不考虑
+        
+        // 综合评分
+        let result = '';
+        if (strength > 8) {
+          result = '日主强，五行得令，精力充沛，自信满满，适宜发展自己的事业。';
+        } else if (strength > 4) {
+          result = '日主中和，五行协调，为人处世较为平衡，能适应各种环境。';
+        } else if (strength > 0) {
+          result = '日主稍弱，需要借助外力支持，宜多与他人合作，善于把握机遇。';
+        } else {
+          result = '日主弱，需注意身体健康，宜低调行事，积累能量，等待时机。';
+        }
+        
+        return result;
+      }
+      
+      // 生成八字解析
+      function generateBaziExplanation(yearColumn, monthColumn, dayColumn, hourColumn, elements) {
+        const explanations = [];
+        
+        // 年柱解析
+        explanations.push(`<p><strong>年柱解析：</strong>${yearColumn}，年柱代表祖上、父母和青少年时期。天干为${yearColumn.charAt(0)}，地支为${yearColumn.charAt(1)}，五行属${fiveElements[yearColumn.charAt(0)]}${fiveElements[yearColumn.charAt(1)]}。年柱为命盘之根，影响早年运势。</p>`);
+        
+        // 月柱解析
+        explanations.push(`<p><strong>月柱解析：</strong>${monthColumn}，月柱代表父母、兄弟姐妹和青年时期。天干为${monthColumn.charAt(0)}，地支为${monthColumn.charAt(1)}，五行属${fiveElements[monthColumn.charAt(0)]}${fiveElements[monthColumn.charAt(1)]}。月柱为命盘提纲，主掌中年之前的运势。</p>`);
+        
+        // 日柱解析
+        explanations.push(`<p><strong>日柱解析：</strong>${dayColumn}，日柱代表自己和配偶。天干为${dayColumn.charAt(0)}（日主），地支为${dayColumn.charAt(1)}，五行属${fiveElements[dayColumn.charAt(0)]}${fiveElements[dayColumn.charAt(1)]}。日柱为命盘核心，象征中年运势和婚姻状况。</p>`);
+        
+        // 时柱解析
+        explanations.push(`<p><strong>时柱解析：</strong>${hourColumn}，时柱代表子女和晚年。天干为${hourColumn.charAt(0)}，地支为${hourColumn.charAt(1)}，五行属${fiveElements[hourColumn.charAt(0)]}${fiveElements[hourColumn.charAt(1)]}。时柱为命盘归宿，主晚年运势和子女缘。</p>`);
+        
+        // 五行综合解析
+        let elementSummary = '<p><strong>五行综合解析：</strong>';
+        const elementNames = ['木', '火', '土', '金', '水'];
+        let dominantElements = [];
+        let weakestElements = [];
+        let maxCount = 0;
+        let minCount = 8;
+        
+        // 找出最多和最少的五行
+        for (const element of elementNames) {
+          if (elements[element] > maxCount) {
+            maxCount = elements[element];
+            dominantElements = [element];
+          } else if (elements[element] === maxCount) {
+            dominantElements.push(element);
+          }
+          
+          if (elements[element] < minCount) {
+            minCount = elements[element];
+            weakestElements = [element];
+          } else if (elements[element] === minCount) {
+            weakestElements.push(element);
+          }
+        }
+        
+        // 生成五行综合分析
+        elementSummary += '五行中，';
+        for (const element of elementNames) {
+          elementSummary += `${element}(${elements[element]}个) `;
+        }
+        
+        // 优势五行
+        elementSummary += '。<br>优势五行为';
+        for (let i = 0; i < dominantElements.length; i++) {
+          if (i > 0) elementSummary += '、';
+          elementSummary += `${dominantElements[i]}（${elements[dominantElements[i]]}个）`;
+        }
+        elementSummary += '，表明你在这些方面天赋较强，运势较顺。';
+        
+        // 弱势五行
+        elementSummary += '<br>需要注意的是，弱势五行为';
+        for (let i = 0; i < weakestElements.length; i++) {
+          if (i > 0) elementSummary += '、';
+          elementSummary += `${weakestElements[i]}（${elements[weakestElements[i]]}个）`;
+        }
+        elementSummary += '，在这些方面可能需要更多关注和补充。</p>';
+        
+        explanations.push(elementSummary);
+        
+        return explanations;
+      }
+      
+      // 表单提交处理
+      baziForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const year = parseInt(document.getElementById('year').value);
+        const month = parseInt(document.getElementById('month').value);
+        const day = parseInt(document.getElementById('day').value);
+        const hour = parseInt(document.getElementById('hour').value);
+        
+        // 计算四柱
+        const yearColumn = calculateYearColumn(year);
+        const monthColumn = calculateMonthColumn(year, month, day);
+        const dayColumn = calculateDayColumn(year, month, day);
+        const hourColumn = calculateHourColumn(hour);
+        
+        // 计算五行统计
+        const elements = calculateElementStats(yearColumn, monthColumn, dayColumn, hourColumn);
+        
+        // 更新结果显示
+        document.getElementById('yearColumn').textContent = yearColumn;
+        document.getElementById('monthColumn').textContent = monthColumn;
+        document.getElementById('dayColumn').textContent = dayColumn;
+        document.getElementById('hourColumn').textContent = hourColumn;
+        
+        // 更新五行统计显示
+        const elementStats = document.getElementById('elementStats');
+        elementStats.innerHTML = '';
+        for (const element in elements) {
+          const div = document.createElement('div');
+          div.className = 'flex items-center';
+          div.innerHTML = `
+            <span class="w-12">${element}：</span>
+            <div class="flex-1 bg-gray-200 rounded-full h-2.5 mr-2">
+              <div class="bg-primary h-2.5 rounded-full" style="width: ${elements[element] * 12.5}%"></div>
+            </div>
+            <span class="w-8 text-right">${elements[element]}个</span>
+          `;
+          elementStats.appendChild(div);
+        }
+        
+        // 更新日主强弱分析
+        const dayMaster = dayColumn.charAt(0);
+        document.getElementById('dayMasterStrength').textContent = analyzeDayMasterStrength(dayMaster, elements);
+        
+        // 更新八字解析
+        const explanationContent = document.getElementById('explanationContent');
+        explanationContent.innerHTML = '';
+        const explanations = generateBaziExplanation(yearColumn, monthColumn, dayColumn, hourColumn, elements);
+        explanations.forEach(exp => {
+          const p = document.createElement('div');
+          p.innerHTML = exp;
+          explanationContent.appendChild(p);
+        });
+        
+        // 显示结果部分
+        resultSection.classList.remove('hidden');
+        
+        // 平滑滚动到结果部分
+        resultSection.scrollIntoView({ behavior: 'smooth' });
+      });
+      
+      // 打印按钮处理
+      printBtn.addEventListener('click', function() {
+        window.print();
+      });
+      
+      // 添加动画效果
+      const elements = document.querySelectorAll('.element-card');
+      elements.forEach(el => {
+        el.addEventListener('mouseenter', function() {
+          this.classList.add('shadow-xl');
+          this.classList.add('scale-[1.01]');
+        });
+        
+        el.addEventListener('mouseleave', function() {
+          this.classList.remove('shadow-xl');
+          this.classList.remove('scale-[1.01]');
+        });
+      });
+    });
+  </script>
+</body>
+</html>
+    
